@@ -1,7 +1,8 @@
 # madi-s-project
 this code has to performance 
-1- create an excel file from ICKala
-2- update that excel file to get quantity
+
+    1- create an excel file from ICKala
+    2- update that excel file to get quantity
 
 first he askes the user what he wants
 
@@ -16,3 +17,8 @@ at last the name of the products, their categories (the last child in the hiarar
 their links are saved with the initial quantity of -1
 
 note: main categories are also saved but without links 
+
+when you update that file only the product with the quantity of -1 is updated
+so the first time, the quantity of all the products (if this is the range you wish) get updated
+but the other times only only the product with the quantity of -1 is updated
+
