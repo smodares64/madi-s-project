@@ -160,14 +160,20 @@ def update_stock_in_excel(
         end_row = len(link_stock_list)
 
     i = 0
-    for index in range(start_row, end_row):
-
-        if link_stock_list[i][1] == -1:
+    for row_index in range(start_row, end_row):
+        original_sheet = rb.sheet_by_index(0)
+        cell_value = original_sheet.cell_value(row_index, 3)
+        link=original_sheet.cell_value(row_index, 2)
+        if cell_value == -1 and link!="":
             # Update the stock in the Excel file
-            ws.write(index, 3, link_stock_list[i][1])
-            i += 1
-
-    wb.save(excelfile)
+            ws.write(row_index, 3, link_stock_list[i][1])
+        i += 1
+    
+    try:
+        wb.save(excelfile)
+    except PermissionError:
+        new_path = r'C:\\Users\\Modarreszadeh\\Desktop\\' +excelfile # Change this!
+        wb.save(new_path)
 
 
 async def update_stock(excelfile, start_row: int = 0, end_row=None):
@@ -216,7 +222,7 @@ async def get_product_links(href: str, category_name: str, category_list: list[d
                                 "div.PM_ASCriterionNbProduct"
                             )
                             if div_PM_ASCriterionNbProduct:
-                                # get the number of th only available products
+                                # get the only available product
                                 availableproducts = int(
                                     div_PM_ASCriterionNbProduct.getText().strip("()")
                                 )
@@ -281,7 +287,7 @@ def save_in_excel(category_list: list[dict]) -> str:
         column_index = 0
 
     wb.save(excelfile)
-
+    return excelfile
 
 
 def read_excel(excelfile: str, start_row: int = 0, end_row: int = 0) -> list[tuple]:
@@ -364,13 +370,10 @@ async def get_category_recursive(
             )
 
 
-async def Read_Data_of_Site():
-    """
-    goes to the ickala for the first time and 
-    starts to navigate the main menue in the ickala
-    """
-    url = "https://ickala.com/"
+async def Read_Data_of_Site(url: str):
+
     product_category_dict = {}
+
     global category_list
     category_list = []
 
@@ -391,15 +394,11 @@ async def Read_Data_of_Site():
                 }
                 category_list.append(product_category_dict)
                 await get_category_recursive(category_li, category_name, category_list)
-            save_in_excel(category_list)
+            excelfile = save_in_excel(category_list)
 
 
 async def main_operation():
-    """
-    here we  ask user what he wants
-    whether he wants to create a excel file
-    if he wants to update all the excel file or just a part of it(just the ones which doesnt have quantity)
-    """
+    """ """
     x: int = int(
         input(
             "if you want to enter data in an excel file enter 1 and if you want to update the stock enter 2: "
@@ -407,12 +406,10 @@ async def main_operation():
     )
     if x == 1:
         print("you are going to enter data in an excel file")
-        
-        await Read_Data_of_Site()
+        url = "https://ickala.com/"
+        await Read_Data_of_Site(url)
 
     else:
-        # here is the name of the excel file that is stored in the directory
-        # of the python file
         excelfile = "xlwt_products.xls"
         if os.path.exists(excelfile):
             start_row: int = int(
@@ -427,8 +424,8 @@ async def main_operation():
             end_row: int = int(
                 input(
                     """
-                    if you want to update the stock enter until the end enter 1
-                    otherwise enter the numeber of the the desired row 
+                if you want to update the stock enter until the end enter 1
+                otherwise enter the numeber of the the desired row 
                     """
                 )
             )
@@ -442,7 +439,7 @@ async def main_operation():
                     print(
                         f"you are going to update the stock from beginning until row {end_row}"
                     )
-                    await update_stock(excelfile, start_row=start_row, end_row=end_row)
+                    await update_stock(excelfile, end_row=end_row)
 
             else:
                 if end_row == 1:
@@ -456,9 +453,7 @@ async def main_operation():
                         print(
                             f"you are going to update the stock from row {start_row} until row {end_row}"
                         )
-                        await update_stock(
-                            excelfile, start_row=start_row, end_row=end_row
-                        )
+                        await update_stock(excelfile, start_row=start_row, end_row=end_row)
                     else:
                         # Invalid range, handle as needed
                         print(
